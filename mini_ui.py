@@ -2,7 +2,6 @@
 
 #Importing modules
 from tkinter import *
-from PIL import ImageTk, Image
 import mysql.connector as sql
 
 #Setting up MySQL
@@ -98,10 +97,13 @@ def create_screen():
         global u
         a1,a2,a3,a4=b.get(),y.get(),n.get(),q.get()
         try:
-            cur.execute('''insert into accounts values('%s','%s','%s','%s')'''%(a1,a2,a3,a4))
+            print(a1,a2,a3,a4)
+            print(type(a1),type(a2),type(a3),type(a4))
+            cur.execute("insert into accounts values('%s','%s','%s','%s')"%(a1,a2,a3,str(a4)))
+            con.commit()
+            u=a1
             window.destroy()
             mainmenu()
-            u=a1
         except:
             msg='Unavailable Username'
             intro_page(msg)
@@ -144,21 +146,64 @@ def create_screen():
     window.mainloop()
 
 def mainmenu():
+    def exitpls():
+        window.destroy()
+    def to_send():
+        window.destroy()
+        send()
+    def to_block():
+        window.destroy()
+        #block()
+    def to_unblock():
+        window.destroy()
+        #unblock()
+    def to_profile():
+        window.destroy()
+        #profile()
     window=Tk()
-    window.geometry('300x250')
+    window.geometry('300x350')
     window.title('ECS')
     window.resizable(False,False)
+
+    l=Label(window,text='MAIN MENU')
+    l.pack()
 
     b1=Button(window,text='Change account',command=intro_page)
     b1.pack(pady=10)   
 
-    b1=Button(window,text='Send a message',command=send)
-    b1.pack(pady=10) 
+    b2=Button(window,text='Send a message',command=to_send)
+    b2.pack(pady=10) 
 
-    b1=Button(window,text='',command=block)
-    b1.pack(pady=10) 
+    b3=Button(window,text='Block a user',command=to_block)
+    b3.pack(pady=10) 
 
-    b1=Button(window,text='Create account',command=unblock)
-    b1.pack(pady=10) 
+    b4=Button(window,text='Pardon a user',command=to_unblock)
+    b4.pack(pady=10) 
+
+    b5=Button(window,text='View your profile',command=to_profile)
+    b5.pack(pady=10) 
+
+    b6=Button(window,text='Exit',command=exitpls)
+    b6.pack(pady=10) 
+    window.mainloop()
+
+def send():
+    window=Tk()
+    window.geometry('300x200')
+    window.title('ECS')
+    window.resizable(False,False)
+
+    c1=Canvas(window)
+    c1.pack(pady=10,side=LEFT,padx=20)
+    x=Label(c1,text='To:')
+    x.pack(side=LEFT)
+    a=Entry(c1)
+    a.pack(side=RIGHT)
+
+    y=Label(window,text='Message: ')
+    y.pack(pady=10,padx=20,side=LEFT)
+
+    b=Entry(window)
+    b.pack(pady=5)
 #Main Program
 intro_page()

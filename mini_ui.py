@@ -17,10 +17,9 @@ except:
 
 #Defining functions
 def login_screen():
-    global login,u 
-    login=False
+    global u 
     def getvalues():
-        global login,u
+        global u
         m=a.get()
         n=b.get()
         cur.execute('select * from accounts')
@@ -28,7 +27,6 @@ def login_screen():
         for i in x:
             if i[0]==m:
                 if i[1]==n:
-                    login=True
                     u=m
                     window.destroy()
                     mainmenu()
@@ -97,15 +95,15 @@ def create_screen():
         global u
         a1,a2,a3,a4=b.get(),y.get(),n.get(),q.get()
         try:
-            print(a1,a2,a3,a4)
-            print(type(a1),type(a2),type(a3),type(a4))
             cur.execute("insert into accounts values('%s','%s','%s','%s')"%(a1,a2,a3,str(a4)))
+            cur.execute("create table %s(from_user varchar(100),message varchar(500))"%(a1,))
             con.commit()
             u=a1
             window.destroy()
             mainmenu()
         except:
             msg='Unavailable Username'
+            window.destroy()
             intro_page(msg)
     window=Tk()
     window.geometry('300x250')
@@ -145,7 +143,7 @@ def create_screen():
 
     window.mainloop()
 
-def mainmenu():
+def mainmenu(msg=''):
     def exitpls():
         window.destroy()
     def to_send():
@@ -153,7 +151,10 @@ def mainmenu():
         send()
     def to_block():
         window.destroy()
-        #block()
+        block()
+    def to_inbox():
+        window.destroy()
+        #inbox()
     def to_unblock():
         window.destroy()
         #unblock()
@@ -161,15 +162,21 @@ def mainmenu():
         window.destroy()
         #profile()
     window=Tk()
-    window.geometry('300x350')
+    window.geometry('300x380')
     window.title('ECS')
     window.resizable(False,False)
 
     l=Label(window,text='MAIN MENU')
     l.pack()
 
+    l2=Label(window,text=msg)
+    l2.pack()
+
     b1=Button(window,text='Change account',command=intro_page)
     b1.pack(pady=10)   
+
+    b7=Button(window,text='Open your inbox',command=to_inbox)
+    b7.pack(pady=10)
 
     b2=Button(window,text='Send a message',command=to_send)
     b2.pack(pady=10) 
@@ -187,23 +194,99 @@ def mainmenu():
     b6.pack(pady=10) 
     window.mainloop()
 
-def send():
+def send(msg=''):
+    def sendmsg():
+        global u
+        m=e.get()
+        n=a.get()
+        window.destroy()
+        if m!='':
+            cur.execute("select * from blocked where from_user='%s' and to_user='%s'")
+            x=cur.fetchall()
+            if x!=[]:
+                cur.execute("insert into %s values(%s,%s)"%(n,u,m))
+            else:
+                send('User was blocked')
+        else:
+            send("No username entered")
+    def back():
+        window.destroy()
+        mainmenu('Message sent')
     window=Tk()
-    window.geometry('300x200')
+    window.geometry('300x300')
     window.title('ECS')
     window.resizable(False,False)
 
+    l1=Label(window,text='SEND A MESSAGE')
+    l1.pack()
+
+    l2=Label(window,text=msg)
+    l2.pack(pady=10)
+
     c1=Canvas(window)
-    c1.pack(pady=10,side=LEFT,padx=20)
+    c1.pack(pady=10)
     x=Label(c1,text='To:')
     x.pack(side=LEFT)
     a=Entry(c1)
     a.pack(side=RIGHT)
 
     y=Label(window,text='Message: ')
-    y.pack(pady=10,padx=20,side=LEFT)
+    y.pack(pady=10)
 
-    b=Entry(window)
-    b.pack(pady=5)
+    e=Entry(window)
+    e.pack(pady=5)
+
+    b=Button(window,text='Send',command=sendmsg)
+    b.pack(pady=10)
+
+    b1=Button(window,text='Back',command=back())
+    b1.pack(pady=10)
+    window.mainloop()
+def block(msg=''):
+    def menupls():
+        window.destroy()
+        mainmenu()
+    def sendinfo():
+        global u
+        window.destroy()
+        x=e.get().strip()
+        if x=='':
+            block('Enter valid input')
+        else:
+            cur.execute("select * from accounts")
+            a=cur.fetchall()
+            for i in a:
+                if i[0]==x:
+                    cur.execute("insert into blocked values('%s','%s')"%(u,x))
+                    con.commit()
+                    flag=True
+            if not flag:
+                block('User not found')
+            else:
+                mainmenu('User successfully blocked')
+    window=Tk()
+    window.geometry('300x250')
+    window.title('ECS')
+    window.resizable(False,False)
+
+    l3=Label(window,text='BLOCK A USER')
+    l3.pack()
+
+    l2=Label(window,text=msg)
+    l2.pack(pady=10)
+
+    l=Label(window,text='Enter the name of user to be blocked:')
+    l.pack(pady=10)
+
+    e=Entry(window)
+    e.pack(pady=5)
+
+    b1=Button(window,text='Submit',command=sendinfo)
+    b1.pack(pady=10)
+
+    b2=Button(window,text='Back',command=menupls)
+    b2.pack(pady=10)
+
+    window.mainloop()
 #Main Program
 intro_page()

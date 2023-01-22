@@ -96,7 +96,7 @@ def create_screen():
         a1,a2,a3,a4=b.get(),y.get(),n.get(),q.get()
         try:
             cur.execute("insert into accounts values('%s','%s','%s','%s')"%(a1,a2,a3,str(a4)))
-            cur.execute("create table %s(from_user varchar(100),message varchar(500))"%(a1,))
+            cur.execute("create table %s(from_user varchar(100),message varchar(200),subject varchar(100))"%(a1,))
             con.commit()
             u=a1
             window.destroy()
@@ -154,7 +154,7 @@ def mainmenu(msg=''):
         block()
     def to_inbox():
         window.destroy()
-        #inbox()
+        inbox()
     def to_unblock():
         window.destroy()
         unblock()
@@ -202,13 +202,14 @@ def send(msg=''):
         global u
         msg=e.get()
         usn=a.get()
+        subj=emer.get()
         if msg!='':
             cur.execute("select * from blocked where from_user='%s' and to_user='%s'"%(u,usn))
             x=cur.fetchall()
             print(x)
             if x==[]:
                 try:
-                    cur.execute("insert into %s values('%s','%s')"%(usn,u,msg))
+                    cur.execute("insert into %s values('%s','%s','%s')"%(usn,u,msg,subj))
                     con.commit()
                     window.destroy()
                     send("Message Sent")
@@ -225,7 +226,7 @@ def send(msg=''):
         window.destroy()
         mainmenu('Message sent')
     window=Tk()
-    window.geometry('300x300')
+    window.geometry('300x320')
     window.title('ECS')
     window.resizable(False,False)
 
@@ -237,12 +238,19 @@ def send(msg=''):
 
     c1=Canvas(window)
     c1.pack(pady=10)
-    x=Label(c1,text='To:')
+    x=Label(c1,text='To      :')
     x.pack(side=LEFT)
     a=Entry(c1)
     a.pack(side=RIGHT)
 
-    y=Label(window,text='Message: ')
+    c2=Canvas(window)
+    c2.pack(pady=10)
+    x1=Label(c2,text='Subject :')
+    x1.pack(side=LEFT)
+    emer=Entry(c2)
+    emer.pack(side=RIGHT)
+
+    y=Label(window,text='Message (200 characters max) : ')
     y.pack(pady=10)
 
     e=Entry(window)
@@ -423,5 +431,94 @@ def profile():
     b.pack(pady=15)
 
     window.mainloop()   
+
+def inbox():
+    def getmsg1():
+        t_check=strvar.get()
+        window.destroy()
+        if t_check=='':
+            mainmenu('No messages in inbox')
+        else:
+            getmsg()
+        window.destroy()
+        getmsg()
+    def menupls():
+        window.destroy()
+        mainmenu()
+    def getmsg():
+        def to_menu():
+            window.destroy()
+            mainmenu()
+        def back():
+            window.destroy()
+            inbox()
+        key=strvar.get()
+        full_msg=d[key]   #[usn,msg,subj]
+
+        window=Tk()
+        window.geometry('300x250')
+        window.title('ECS')
+        window.resizable(False,False)
+
+        c1=Canvas(window)
+        c1.pack()
+        x1=Label(c1,text='Sender :')
+        x1.pack(side=LEFT)
+        a1=Label(c1,text=str(full_msg[0]))
+        a1.pack(side=RIGHT)
+
+        c2=Canvas(window)
+        c2.pack()
+        x2=Label(c2,text='Subject :')
+        x2.pack(side=LEFT)
+        a2=Label(c2,text=str(full_msg[2]))
+        a2.pack(side=RIGHT)
+
+        l1=Label(window,text='Message:')
+        l1.pack(pady=10)
+
+        l2=Label(window,text=full_msg[1][:50])
+        l2.pack(pady=5)
+
+        l3=Label(window,text=full_msg[1][50:])
+        l3.pack(pady=5)
+
+        b1=Button(window,text='Back',command=back)
+        b1.pack(pady=10)
+
+        b2=Button(window,text='Main Menu',command=to_menu)
+        b2.pack()
+        window.mainloop()
+    global u
+
+    window=Tk()
+    window.geometry('300x200')
+    window.title('ECS')
+    window.resizable(False,False)
+
+    l=Label(window,text='Choose a message to display')
+    l.pack(pady=10)
+    try:
+        cur.execute("select * from %s"%(u,))
+        a=cur.fetchall()
+        l=[]
+        d={}
+        for i in a:
+            temp=str(i[0])+' - '+str(i[2])
+            l.append(temp)
+            d[temp]=[i[0],i[1],i[2]]
+    except:
+        l=[]
+    strvar=StringVar(window)
+    strvar.set('<User - Subject>')
+    w=OptionMenu(window,strvar,*l)
+    w.pack(pady=10)
+    b=Button(window,text='Submit',command=getmsg1)
+    b.pack(pady=10)
+
+    b1=Button(window,text='Back',command=menupls)
+    b1.pack(pady=10)
+
+    window.mainloop()
 #Main Program
 intro_page()

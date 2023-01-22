@@ -157,10 +157,13 @@ def mainmenu(msg=''):
         #inbox()
     def to_unblock():
         window.destroy()
-        #unblock()
+        unblock()
     def to_profile():
         window.destroy()
-        #profile()
+        profile()
+    def to_intro_page():
+        window.destroy()
+        intro_page()
     window=Tk()
     window.geometry('300x380')
     window.title('ECS')
@@ -172,7 +175,7 @@ def mainmenu(msg=''):
     l2=Label(window,text=msg)
     l2.pack()
 
-    b1=Button(window,text='Change account',command=intro_page)
+    b1=Button(window,text='Change account',command=to_intro_page)
     b1.pack(pady=10)   
 
     b7=Button(window,text='Open your inbox',command=to_inbox)
@@ -187,7 +190,7 @@ def mainmenu(msg=''):
     b4=Button(window,text='Pardon a user',command=to_unblock)
     b4.pack(pady=10) 
 
-    b5=Button(window,text='View your profile',command=to_profile)
+    b5=Button(window,text='View user profiles',command=to_profile)
     b5.pack(pady=10) 
 
     b6=Button(window,text='Exit',command=exitpls)
@@ -197,18 +200,27 @@ def mainmenu(msg=''):
 def send(msg=''):
     def sendmsg():
         global u
-        m=e.get()
-        n=a.get()
-        window.destroy()
-        if m!='':
-            cur.execute("select * from blocked where from_user='%s' and to_user='%s'")
+        msg=e.get()
+        usn=a.get()
+        if msg!='':
+            cur.execute("select * from blocked where from_user='%s' and to_user='%s'"%(u,usn))
             x=cur.fetchall()
-            if x!=[]:
-                cur.execute("insert into %s values(%s,%s)"%(n,u,m))
+            print(x)
+            if x==[]:
+                try:
+                    cur.execute("insert into %s values('%s','%s')"%(usn,u,msg))
+                    con.commit()
+                    window.destroy()
+                    send("Message Sent")
+                except:
+                    window.destroy()
+                    send('User not found')
             else:
+                window.destroy()
                 send('User was blocked')
         else:
-            send("No username entered")
+            window.destroy()
+            send("No message")
     def back():
         window.destroy()
         mainmenu('Message sent')
@@ -239,16 +251,16 @@ def send(msg=''):
     b=Button(window,text='Send',command=sendmsg)
     b.pack(pady=10)
 
-    b1=Button(window,text='Back',command=back())
+    b1=Button(window,text='Back',command=back)
     b1.pack(pady=10)
     window.mainloop()
+
 def block(msg=''):
     def menupls():
         window.destroy()
         mainmenu()
     def sendinfo():
         global u
-        window.destroy()
         x=e.get().strip()
         if x=='':
             block('Enter valid input')
@@ -260,6 +272,7 @@ def block(msg=''):
                     cur.execute("insert into blocked values('%s','%s')"%(u,x))
                     con.commit()
                     flag=True
+            window.destroy()
             if not flag:
                 block('User not found')
             else:
@@ -288,5 +301,127 @@ def block(msg=''):
     b2.pack(pady=10)
 
     window.mainloop()
+
+def unblock(msg=''):
+    def menupls():
+        window.destroy()
+        mainmenu()
+    def sendinfo():
+        global u
+        x=e.get().strip()
+        window.destroy()
+        if x=='':
+            unblock('Enter valid input')
+        else:
+            cur.execute("select * from blocked where from_user='%s' and to_user='%s'"%(u,x))
+            a=cur.fetchall()
+            if a==[]:
+                unblock('User was not blocked')
+            else:
+                cur.execute("delete from blocked where from_user='%s' and to_user='%s'"%(u,x))
+                con.commit()
+                mainmenu('User unblocked')
+    window=Tk()
+    window.geometry('300x250')
+    window.title('ECS')
+    window.resizable(False,False)
+
+    l3=Label(window,text='UNBLOCK A USER')
+    l3.pack()
+
+    l2=Label(window,text=msg)
+    l2.pack(pady=10)
+
+    l=Label(window,text='Enter the name of user to be unblocked:')
+    l.pack(pady=10)
+
+    e=Entry(window)
+    e.pack(pady=5)
+
+    b1=Button(window,text='Submit',command=sendinfo)
+    b1.pack(pady=10)
+
+    b2=Button(window,text='Back',command=menupls)
+    b2.pack(pady=10)
+
+    window.mainloop()
+
+def profile():
+    def to_my_profile():
+        global u
+        window.destroy()
+        prof_page(u)
+    def to_other_profile():
+        en=a.get()
+        window.destroy()
+        prof_page(en)
+    def prof_page(usn):
+        def to_menu():
+            window.destroy()
+            mainmenu()
+        def back():
+            window.destroy()
+            profile()
+        cur.execute("select * from accounts where username='%s'"%(usn,))
+        a=cur.fetchall()[0]
+
+        window=Tk()
+        window.geometry('300x200')
+        window.title('ECS')
+        window.resizable(False,False)
+
+        lab=Label(window,text='USER PROFILE')
+        lab.pack(pady=10)
+
+        c1=Canvas(window)
+        c1.pack()
+        x1=Label(c1,text='Username :')
+        x1.pack(side=LEFT)
+        a1=Label(c1,text=str(a[0]))
+        a1.pack(side=RIGHT)  
+
+        c2=Canvas(window)
+        c2.pack()
+        x2=Label(c2,text='Name      :')
+        x2.pack(side=LEFT)
+        a2=Label(c2,text=str(a[2]))
+        a2.pack(side=RIGHT)  
+
+        c3=Canvas(window)
+        c3.pack()
+        x3=Label(c3,text='Phone    :')
+        x3.pack(side=LEFT)
+        a3=Label(c3,text=str(a[3]))
+        a3.pack(side=RIGHT)  
+
+        b1=Button(window,text='Back',command=back)
+        b1.pack(pady=10)
+
+        b2=Button(window,text='Main Menu',command=to_menu)
+        b2.pack(pady=10)
+
+        window.mainloop()
+    window=Tk()
+    window.geometry('300x200')
+    window.title('ECS')
+    window.resizable(False,False)
+
+    l=Label(window,text='Enter username')
+    l.pack(pady=10)
+
+    c1=Canvas(window)
+    c1.pack(pady=10)
+    x=Label(c1,text='Username :')
+    x.pack(side=LEFT)
+    a=Entry(c1)
+    a.pack(side=RIGHT)
+
+    b1=Button(window,text='Submit',command=to_other_profile)
+    b1.pack(pady=10)
+
+    b=Button(window,text='My Profile',command=to_my_profile)
+    b.pack(pady=15)
+
+    window.mainloop()   
 #Main Program
 intro_page()

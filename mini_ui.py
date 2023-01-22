@@ -498,20 +498,25 @@ def inbox():
 
     l=Label(window,text='Choose a message to display')
     l.pack(pady=10)
-    try:
-        cur.execute("select * from %s"%(u,))
-        a=cur.fetchall()
+
+    cur.execute("select * from %s"%(u,))
+    a=cur.fetchall()
+
+    if a!=[]:
         l=[]
         d={}
         for i in a:
             temp=str(i[0])+' - '+str(i[2])
             l.append(temp)
             d[temp]=[i[0],i[1],i[2]]
-    except:
-        l=[]
-    strvar=StringVar(window)
-    strvar.set('<User - Subject>')
-    w=OptionMenu(window,strvar,*l)
+        strvar=StringVar(window)
+        strvar.set('<User - Subject>')
+        w=OptionMenu(window,strvar,*l)
+    else:
+        strvar=StringVar(window)
+        strvar.set('<User - Subject>')
+        w=OptionMenu(window,strvar,'')
+
     w.pack(pady=10)
     b=Button(window,text='Submit',command=getmsg1)
     b.pack(pady=10)

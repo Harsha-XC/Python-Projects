@@ -269,6 +269,7 @@ def block(msg=''):
         mainmenu()
     def sendinfo():
         global u
+        flag=False
         x=e.get().strip()
         if x=='':
             block('Enter valid input')
